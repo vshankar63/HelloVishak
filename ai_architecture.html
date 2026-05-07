@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Agent Architecture – Product Ops</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07080f;
+    --surface: #0e0f1a;
+    --border: #1a1b2e;
+    --text: #e8e8f0;
+    --muted: #555570;
+    --yellow: #e8ff47;
+    --blue: #47c8ff;
+    --green: #4fffb0;
+    --purple: #c084fc;
+    --orange: #ffaa47;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    padding: 40px 32px;
+    overflow-x: hidden;
+  }
+
+  .page { max-width: 1200px; margin: 0 auto; }
+
+  .header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  h1 { font-family: 'Bebas Neue', sans-serif; font-size: 56px; letter-spacing: 2px; line-height: 1; }
+  h1 span { color: var(--yellow); }
+
+  .subtitle {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  .legend { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* Phase banners */
+  .phase-banner { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+
+  .phase-card { padding: 14px 20px; border: 1px solid var(--border); background: var(--surface); position: relative; overflow: hidden; }
+  .phase-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+  .phase-card.immediate::before { background: var(--green); }
+  .phase-card.strategic::before { background: var(--purple); }
+
+  .phase-card-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
+  .phase-card.immediate .phase-card-label { color: var(--green); }
+  .phase-card.strategic .phase-card-label { color: var(--purple); }
+
+  .phase-card-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+  .phase-card-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+  .phase-card-layers { margin-top: 8px; font-family: 'DM Mono', monospace; font-size: 10px; padding: 4px 8px; display: inline-block; border-radius: 2px; }
+  .phase-card.immediate .phase-card-layers { background: rgba(79,255,176,0.08); color: var(--green); }
+  .phase-card.strategic .phase-card-layers { background: rgba(192,132,252,0.08); color: var(--purple); }
+
+  /* Diagram */
+  .diagram { display: flex; flex-direction: column; gap: 4px; }
+
+  .layer { display: grid; gap: 12px; padding: 20px 16px; border: 1px solid var(--border); background: var(--surface); position: relative; }
+  .layer-label { position: absolute; top: -1px; left: 20px; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; padding: 3px 10px; background: var(--bg); }
+  .layer-phase-tag { position: absolute; top: -1px; right: 20px; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; padding: 3px 10px; background: var(--bg); }
+
+  .layer.sources { grid-template-columns: repeat(5, 1fr); border-color: #1a2a1a; }
+  .layer.sources .layer-label { color: var(--green); border-top: 1px solid var(--green); }
+  .layer.sources .layer-phase-tag { color: var(--green); }
+
+  .layer.ingestion { grid-template-columns: repeat(3, 1fr); border-color: #1a1a2e; }
+  .layer.ingestion .layer-label { color: var(--blue); border-top: 1px solid var(--blue); }
+  .layer.ingestion .layer-phase-tag { color: var(--green); }
+
+  .layer.agents { grid-template-columns: repeat(5, 1fr); border-color: #1a1520; }
+  .layer.agents .layer-label { color: var(--purple); border-top: 1px solid var(--purple); }
+  .layer.agents .layer-phase-tag { color: var(--green); }
+
+  .layer.synthesis { grid-template-columns: 1fr; border-color: #2a1f0a; }
+  .layer.synthesis .layer-label { color: var(--yellow); border-top: 1px solid var(--yellow); }
+  .layer.synthesis .layer-phase-tag { color: var(--purple); }
+
+  .layer.outputs { grid-template-columns: repeat(4, 1fr); border-color: #2a1a10; }
+  .layer.outputs .layer-label { color: var(--orange); border-top: 1px solid var(--orange); }
+  .layer.outputs .layer-phase-tag { color: var(--purple); }
+
+  /* Flow callouts */
+  .flow-callouts { display: grid; gap: 2px; }
+  .flow-callouts.five { grid-template-columns: repeat(5, 1fr); }
+  .flow-callouts.three { grid-template-columns: repeat(3, 1fr); }
+  .flow-callouts.four { grid-template-columns: repeat(4, 1fr); }
+
+  .callout { padding: 7px 10px; background: rgba(255,255,255,0.015); border-top: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .callout-arrow { font-size: 12px; color: var(--muted); }
+  .callout-text { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 0.5px; text-align: center; line-height: 1.4; }
+
+  /* Node cards */
+  .node { padding: 14px 14px 12px; border: 1px solid var(--border); background: rgba(255,255,255,0.02); position: relative; transition: border-color 0.2s; }
+  .node:hover { border-color: rgba(255,255,255,0.15); }
+  .node::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+  .node.green::before { background: var(--green); }
+  .node.blue::before { background: var(--blue); }
+  .node.purple::before { background: var(--purple); }
+  .node.yellow::before { background: var(--yellow); }
+  .node.orange::before { background: var(--orange); }
+
+  .node-icon { font-size: 18px; margin-bottom: 8px; display: block; }
+  .node-title { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 4px; line-height: 1.3; }
+  .node-tool { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--blue); margin-bottom: 6px; letter-spacing: 0.5px; }
+  .node-desc { font-size: 11px; color: var(--muted); line-height: 1.5; font-weight: 300; }
+  .node-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+  .tag { font-family: 'DM Mono', monospace; font-size: 9px; padding: 2px 6px; border-radius: 2px; letter-spacing: 0.5px; text-transform: uppercase; }
+  .tag.green { background: rgba(79,255,176,0.1); color: var(--green); }
+  .tag.blue { background: rgba(71,200,255,0.1); color: var(--blue); }
+  .tag.purple { background: rgba(192,132,252,0.1); color: var(--purple); }
+  .tag.yellow { background: rgba(232,255,71,0.1); color: var(--yellow); }
+  .tag.orange { background: rgba(255,170,71,0.1); color: var(--orange); }
+
+  /* Synthesis */
+  .synthesis-inner { display: grid; grid-template-columns: 1fr 2px 2fr; gap: 24px; align-items: center; }
+  .synthesis-core { padding: 16px; border: 1px solid rgba(232,255,71,0.2); background: rgba(232,255,71,0.03); position: relative; }
+  .synthesis-core::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--yellow); }
+  .synthesis-core .node-title { font-size: 15px; color: var(--yellow); }
+  .divider { background: var(--border); }
+  .synthesis-flows { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .flow-item { padding: 10px 12px; border: 1px solid var(--border); background: rgba(255,255,255,0.02); }
+  .flow-from { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
+  .flow-desc { font-size: 11px; color: #9090b0; line-height: 1.5; }
+
+  .footer { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .footer-note { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 1px; }
+  .principle { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--yellow); letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div>
+      <h1>AI AGENT <span>ARCHITECTURE</span></h1>
+      <div class="subtitle">Product Operations — Mews · R&amp;D x GTM Intelligence Stack</div>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Data Sources</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div> Ingestion Layer</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div> Agent Layer</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div> Synthesis Core</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div> Output Layer</div>
+    </div>
+  </div>
+
+  <div class="phase-banner">
+    <div class="phase-card immediate">
+      <div class="phase-card-label">Phase 1 — Immediate</div>
+      <div class="phase-card-title">Quick Wins and Manual Task Removal</div>
+      <div class="phase-card-desc">Connect existing Mews tools, surface data that already exists, and eliminate the most painful manual steps. No new architecture required — just better plumbing between what is already in place.</div>
+      <div class="phase-card-layers">Layers 1, 2, 3</div>
+    </div>
+    <div class="phase-card strategic">
+      <div class="phase-card-label">Phase 2 — Strategic</div>
+      <div class="phase-card-title">Long-Term Intelligence Infrastructure</div>
+      <div class="phase-card-desc">Once data flows are clean and agents are proven, build the synthesis and output layers that give Hugo and the product org a real-time view of how they are operating. Depends entirely on the outputs of Phase 1.</div>
+      <div class="phase-card-layers">Layers 4, 5</div>
+    </div>
+  </div>
+
+  <div class="diagram">
+
+    <!-- LAYER 1 -->
+    <div class="layer sources">
+      <div class="layer-label">Layer 1 — Data Sources</div>
+      <div class="layer-phase-tag">Phase 1 · Immediate</div>
+      <div class="node green">
+        <span class="node-icon">🗺️</span>
+        <div class="node-title">Product Discovery and Roadmaps</div>
+        <div class="node-tool">JPD</div>
+        <div class="node-desc">Feature ideas, discovery notes, opportunity sizing, roadmap priorities and current status</div>
+        <div class="node-tags"><span class="tag green">R&amp;D</span><span class="tag green">Discovery</span></div>
+      </div>
+      <div class="node green">
+        <span class="node-icon">📋</span>
+        <div class="node-title">Tickets, Epics and Release Status</div>
+        <div class="node-tool">Jira + Atlas</div>
+        <div class="node-desc">Sprint data, delivery status, epic tracking, release flags, team assignments and blockers</div>
+        <div class="node-tags"><span class="tag green">R&amp;D</span><span class="tag green">Delivery</span></div>
+      </div>
+      <div class="node green">
+        <span class="node-icon">🎙️</span>
+        <div class="node-title">Interview and Session Recordings</div>
+        <div class="node-tool">Recorded Sessions</div>
+        <div class="node-desc">PM and GTM structured interviews, discovery calls, retros and stakeholder sessions</div>
+        <div class="node-tags"><span class="tag green">Qualitative</span></div>
+      </div>
+      <div class="node green">
+        <span class="node-icon">💬</span>
+        <div class="node-title">Customer and Commercial Signal</div>
+        <div class="node-tool">Salesforce + Mews Community</div>
+        <div class="node-desc">Sales objections, customer feedback, support tickets, community posts and churn signals</div>
+        <div class="node-tags"><span class="tag green">GTM</span><span class="tag green">Commercial</span></div>
+      </div>
+      <div class="node green">
+        <span class="node-icon">📊</span>
+        <div class="node-title">Analytics and Product Intelligence</div>
+        <div class="node-tool">Power BI + Gainsight + BI Tools</div>
+        <div class="node-desc">Feature adoption, usage patterns, activation metrics, health scores and NPS data</div>
+        <div class="node-tags"><span class="tag green">Product</span><span class="tag green">Analytics</span></div>
+      </div>
+    </div>
+
+    <div class="flow-callouts five">
+      <div class="callout"><div class="callout-arrow">↓</div><div class="callout-text">JPD discovery data and roadmap snapshots</div></div>
+      <div class="callout"><div class="callout-arrow">↓</div><div class="callout-text">Jira tickets and Atlas release status</div></div>
+      <div class="callout"><div class="callout-arrow">↓</div><div class="callout-text">transcripts and tagged session notes</div></div>
+      <div class="callout"><div class="callout-arrow">↓</div><div class="callout-text">Salesforce CRM and community posts</div></div>
+      <div class="callout"><div class="callout-arrow">↓</div><div class="callout-text">Power BI and Gainsight usage data</div></div>
+    </div>
+
+    <!-- LAYER 2 -->
+    <div class="layer ingestion">
+      <div class="layer-label">Layer 2 — Ingestion and Processing</div>
+      <div class="layer-phase-tag">Phase 1 · Immediate</div>
+      <div class="node blue">
+        <span class="node-icon">🔌</span>
+        <div class="node-title">Connector Layer</div>
+        <div class="node-tool">JPD / Jira / Atlas / Salesforce APIs</div>
+        <div class="node-desc">Scheduled API pulls from JPD, Jira, Atlas, Salesforce, and Mews Community normalised into a shared schema. Removes the manual copy-paste between systems that PMs do today.</div>
+        <div class="node-tags"><span class="tag blue">Scheduled</span><span class="tag blue">API</span></div>
+      </div>
+      <div class="node blue">
+        <span class="node-icon">🎧</span>
+        <div class="node-title">Transcription and Chunking</div>
+        <div class="node-tool">Whisper / AssemblyAI</div>
+        <div class="node-desc">Session recordings converted to transcripts, chunked by topic, tagged by speaker role (PM vs GTM) and sentiment. Turns qualitative sessions into structured, queryable signal.</div>
+        <div class="node-tags"><span class="tag blue">NLP</span><span class="tag blue">Qualitative</span></div>
+      </div>
+      <div class="node blue">
+        <span class="node-icon">🗄️</span>
+        <div class="node-title">Vector Store</div>
+        <div class="node-tool">Embeddings / RAG Layer</div>
+        <div class="node-desc">All processed data embedded and stored. Enables semantic search across JPDs, Jira tickets, interviews, Salesforce notes, and community posts. The shared memory all agents query against.</div>
+        <div class="node-tags"><span class="tag blue">Embeddings</span><span class="tag blue">RAG</span></div>
+      </div>
+    </div>
+
+    <div class="flow-callouts three">
+      <div class="callout"><div class="callout-arrow">↓</div><div class="callout-text">normalised structured data from all Mews sources</div></div>
+      <div class="callout"><div class="callout-arrow">↓</div><div class="callout-text">tagged qualitative signal from sessions</div></div>
+      <div class="callout"><div class="callout-arrow">↓</div><div class="callout-text">semantic search across all embedded data</div></div>
+    </div>
+
+    <!-- LAYER 3 -->
+    <div class="layer agents">
+      <div class="layer-label">Layer 3 — Specialist Agents</div>
+      <div class="layer-phase-tag">Phase 1 · Immediate</div>
+      <div class="node purple">
+        <span class="node-icon">🔍</span>
+        <div class="node-title">Interview Synthesis Agent</div>
+        <div class="node-desc">Processes PM and GTM interview transcripts. Maps friction themes, language gaps, and recurring pain points. Outputs a structured diagnostic report. First agent to build.</div>
+        <div class="node-tags"><span class="tag purple">Diagnostic</span><span class="tag purple">Days 1-30</span></div>
+      </div>
+      <div class="node purple">
+        <span class="node-icon">✅</span>
+        <div class="node-title">Launch Readiness Agent</div>
+        <div class="node-desc">PM inputs JPD and release details. Agent checks against GTM readiness criteria — notes drafted, help centre updated, sales briefed. Flags blockers before any handoff occurs.</div>
+        <div class="node-tags"><span class="tag purple">Gating</span><span class="tag purple">Days 31-60</span></div>
+      </div>
+      <div class="node purple">
+        <span class="node-icon">📡</span>
+        <div class="node-title">Feedback Loop Agent</div>
+        <div class="node-desc">Pulls signals from Salesforce and Mews Community. Clusters by theme and feature. Surfaces patterns to Product weekly — closing the loop that currently does not exist at Mews.</div>
+        <div class="node-tags"><span class="tag purple">GTM to R&amp;D</span><span class="tag purple">Weekly</span></div>
+      </div>
+      <div class="node purple">
+        <span class="node-icon">📝</span>
+        <div class="node-title">Release Notes Agent</div>
+        <div class="node-desc">Pulls from JPD and Jira epics. Drafts GTM-friendly release notes automatically, removing the manual handoff between R&amp;D and Content. PM reviews and approves before publish.</div>
+        <div class="node-tags"><span class="tag purple">Automation</span><span class="tag purple">Per Release</span></div>
+      </div>
+      <div class="node purple">
+        <span class="node-icon">🎓</span>
+        <div class="node-title">PM Onboarding Agent</div>
+        <div class="node-desc">Queryable knowledge base for new PMs. Trained on Mews ways of working, JPD standards, and tooling docs. Answers instantly — not via Slack threads or someone's memory.</div>
+        <div class="node-tags"><span class="tag purple">Knowledge</span><span class="tag purple">Always-on</span></div>
+      </div>
+    </div>
+
+    <div class="flow-callouts five">
+      <div class="callout"><div class="callout-arrow">↓</div><div class="callout-text">friction map and diagnostic report</div></div>
+      <div class="callout"><div class="callout-arrow">↓</div><div class="callout-text">readiness score and blockers list</div></div>
+      <div class="callout"><div class="callout-arrow">↓</div><div class="callout-text">clustered customer signal themes</div></div>
+      <div class="callout"><div class="callout-arrow">↓</div><div class="callout-text">draft release notes for PM review</div></div>
+      <div class="callout"><div class="callout-arrow">↓</div><div class="callout-text">ways of working answers on demand</div></div>
+    </div>
+
+    <!-- LAYER 4 -->
+    <div class="layer synthesis">
+      <div class="layer-label">Layer 4 — Synthesis Core</div>
+      <div class="layer-phase-tag">Phase 2 · Strategic</div>
+      <div class="synthesis-inner">
+        <div class="synthesis-core">
+          <span class="node-icon">⚡</span>
+          <div class="node-title">Product Ops Intelligence Core</div>
+          <div class="node-desc" style="color:#9090b0; margin-top:8px;">The connective layer. Aggregates outputs from all five agents into a unified view. Identifies cross-agent patterns — a feature flagged by the Launch Readiness Agent that also shows negative signal in the Feedback Loop Agent. Surfaces conflicts and priorities to the Product Ops lead. Only viable once Layers 1, 2, and 3 are stable and producing reliable signal.</div>
+          <div class="node-tags" style="margin-top:12px;">
+            <span class="tag yellow">Cross-agent reasoning</span>
+            <span class="tag yellow">Conflict detection</span>
+            <span class="tag yellow">Weekly digest</span>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="synthesis-flows">
+          <div class="flow-item">
+            <div class="flow-from">From Synthesis Agent</div>
+            <div class="flow-desc">Friction themes ranked by frequency and severity. Used to prioritise which process to fix next and where structural change is most needed.</div>
+          </div>
+          <div class="flow-item">
+            <div class="flow-from">From Launch and Feedback Agents</div>
+            <div class="flow-desc">Correlation between readiness gaps and post-launch customer confusion. Informs checklist refinement and engagement model updates over time.</div>
+          </div>
+          <div class="flow-item">
+            <div class="flow-from">From All Agents</div>
+            <div class="flow-desc">Weekly health report: what is stuck, what is flowing, where R&amp;D and GTM are misaligned. Single source of truth for Hugo and Product Directors.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-callouts four">
+      <div class="callout"><div class="callout-arrow">↓</div><div class="callout-text">org health report</div></div>
+      <div class="callout"><div class="callout-arrow">↓</div><div class="callout-text">launch go / no-go signal</div></div>
+      <div class="callout"><div class="callout-arrow">↓</div><div class="callout-text">GTM signal digest</div></div>
+      <div class="callout"><div class="callout-arrow">↓</div><div class="callout-text">approved release comms</div></div>
+    </div>
+
+    <!-- LAYER 5 -->
+    <div class="layer outputs">
+      <div class="layer-label">Layer 5 — Outputs and Consumers</div>
+      <div class="layer-phase-tag">Phase 2 · Strategic</div>
+      <div class="node orange">
+        <span class="node-icon">📈</span>
+        <div class="node-title">Weekly Ops Dashboard</div>
+        <div class="node-desc">Hugo and Product Directors. R&amp;D to GTM health score, launch pipeline status, and top friction themes. Real-time visibility into how the product org is operating.</div>
+        <div class="node-tags"><span class="tag orange">Leadership</span></div>
+      </div>
+      <div class="node orange">
+        <span class="node-icon">🚀</span>
+        <div class="node-title">Launch Go / No-Go</div>
+        <div class="node-desc">PM and GTM leads receive a readiness score and blocker list before every release. No more production-ready vs GTM-ready confusion. Clear accountability on both sides.</div>
+        <div class="node-tags"><span class="tag orange">PM + GTM</span></div>
+      </div>
+      <div class="node orange">
+        <span class="node-icon">🔁</span>
+        <div class="node-title">GTM Signal Report</div>
+        <div class="node-desc">Product teams receive a weekly digest of what customers are saying, pulled from Salesforce and Mews Community. Closes the feedback loop that currently does not exist.</div>
+        <div class="node-tags"><span class="tag orange">Product Teams</span></div>
+      </div>
+      <div class="node orange">
+        <span class="node-icon">📣</span>
+        <div class="node-title">Release Comms</div>
+        <div class="node-desc">Approved release notes published to GTM channels — Slack, Notion, sales enablement. Auto-drafted from JPD and Jira. Removes the manual Content handoff entirely.</div>
+        <div class="node-tags"><span class="tag orange">GTM Teams</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <div class="footer-note">Mews Product Operations · Layers 1-3 immediate · Layers 4-5 strategic</div>
+    <div class="principle">Diagnose first. Automate what you understand. Build the intelligence layer last.</div>
+  </div>
+
+</div>
+</body>
+</html>
