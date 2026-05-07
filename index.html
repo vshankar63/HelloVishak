@@ -16,8 +16,8 @@
       --border: rgba(255,255,255,0.08);
       --text: #e8e8f0;
       --muted: #55556a;
-      --pink: #e8437a;
-      --yellow: #e8ff47;
+      --pink: #52b788;
+      --yellow: #b7e4c7;
       --blue: #47c8ff;
       --purple: #c084fc;
       --nav-h: 64px;
@@ -134,7 +134,7 @@
       transition: color 0.2s, background 0.2s;
     }
 
-    .mob-nav button.active { color: var(--pink); background: rgba(232,67,122,0.08); }
+    .mob-nav button.active { color: var(--pink); background: rgba(82,183,136,0.08); }
 
     /* ─── PAGES ─── */
     .page { display: none; min-height: 100vh; padding-top: var(--nav-h); }
@@ -142,7 +142,7 @@
 
     /* ─── HERO ─── */
     .hero {
-      padding: 5rem 2rem 2.5rem;
+      padding: 5rem 2rem 1rem;
       max-width: 1200px;
       margin: 0 auto;
     }
@@ -173,7 +173,7 @@
     .container {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 3rem 2rem 5rem;
+      padding: 1.5rem 2rem 5rem;
     }
 
     /* ─── FADE-IN ─── */
@@ -328,24 +328,25 @@
     }
 
     .block-label {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 0.78rem;
-      letter-spacing: 0.2em;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
       color: var(--muted);
       margin-bottom: 1rem;
     }
 
     .north-star-card {
-      background: rgba(232,67,122,0.04);
-      border: 1px solid rgba(232,67,122,0.2);
+      background: rgba(82,183,136,0.04);
+      border: 1px solid rgba(82,183,136,0.2);
       border-left: 3px solid var(--pink);
       border-radius: 12px;
       padding: 2rem 2.5rem;
     }
 
     .north-star-text {
-      font-size: 1.4rem;
+      font-size: 1.25rem;
       line-height: 1.65;
       color: var(--text);
       font-weight: 500;
@@ -360,7 +361,7 @@
     }
 
     .problem-card p {
-      font-size: 1.1rem;
+      font-size: 1.25rem;
       color: var(--text);
       line-height: 1.8;
     }
@@ -1438,6 +1439,7 @@
         <li>Start documenting the AI infrastructure of agents and processes as it is built</li>
         <li>Understand the Product Ops team OKRs and success metrics</li>
         <li>Learn from existing Product Ops insights alongside conducting my own discovery</li>
+        <li>Structure the Product Guild, utilizing learnings from running the Product Monthlies — sessions that brought Product Managers together to upskill, network with colleagues across Mews, and build community</li>
       </ul>
     </div>
 
@@ -1514,8 +1516,30 @@
 
   <div class="container">
 
-    <!-- References section -->
+    <!-- Artifacts section -->
     <div class="ctx-section fi" style="transition-delay:0.02s">
+      <div class="block-label" style="color:var(--blue)">Artifacts</div>
+      <div class="art-grid">
+
+        <div class="art-card a-blue fi" onclick="openModal('modal-arch')" style="cursor:pointer">
+          <div class="art-label">Strategy</div>
+          <h4>AI Agent Architecture</h4>
+          <p class="art-desc">A layered architecture mapping how AI agents can remove manual overhead, close the R&amp;D to GTM feedback loop, and give product leadership a real-time view of how the org is operating.</p>
+          <div class="art-btn">View More ↗</div>
+        </div>
+
+        <div class="art-card a-pink fi" onclick="openModal('modal-pos')" style="cursor:pointer">
+          <div class="art-label">Product</div>
+          <h4>POS Onboarding Tool</h4>
+          <p class="art-desc">An AI-powered tool that generates POS product catalogs from a venue's website or documents. Created alongside onboarding managers with the plan to scale to customers in order to enable bulk editing and self serve.</p>
+          <div class="art-btn">View More ↗</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- References section -->
+    <div class="ctx-section fi" style="transition-delay:0.1s">
       <div class="block-label" style="color:var(--pink)">References</div>
       <div class="ref-grid">
 
@@ -1534,28 +1558,6 @@
           <div class="ref-category">Mapping &amp; Solution Definition</div>
           <div class="ref-name">Olivia Dingreville</div>
           <div class="ref-name">Sofia Santos</div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- Artifacts section -->
-    <div class="ctx-section fi" style="transition-delay:0.1s">
-      <div class="block-label" style="color:var(--blue)">Artifacts</div>
-      <div class="art-grid">
-
-        <div class="art-card a-blue fi" onclick="openModal('modal-arch')" style="cursor:pointer">
-          <div class="art-label">Strategy</div>
-          <h4>AI Agent Architecture</h4>
-          <p class="art-desc">A layered architecture mapping how AI agents can remove manual overhead, close the R&amp;D to GTM feedback loop, and give product leadership a real-time view of how the org is operating.</p>
-          <div class="art-btn">View More ↗</div>
-        </div>
-
-        <div class="art-card a-pink fi" onclick="openModal('modal-pos')" style="cursor:pointer">
-          <div class="art-label">Product</div>
-          <h4>POS Onboarding Tool</h4>
-          <p class="art-desc">An AI-powered tool that generates POS product catalogs from a venue's website or documents. Created alongside onboarding managers with the plan to scale to customers in order to enable bulk editing and self serve.</p>
-          <div class="art-btn">View More ↗</div>
         </div>
 
       </div>
